@@ -30,7 +30,7 @@ opt = lapp[[
 		--optMethod			 (default rmsprop)			optimization method
 		--data_dir			(default /nv/pf1/hhassanzadeh3/Projects/Mortality_Prediction/data/)   location of mortality data
 		--input_file 	(default VS15MORT.DUSMCPUB)    name of mortality file
-		--lstm_layers (default 30,20)  layers' sizes of lstm
+		--lstm_layers (default 30,30)  layers' sizes of lstm
 ]]
 
 

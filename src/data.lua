@@ -111,9 +111,9 @@ local train =torch.Tensor(trsize,20,100+table_len(icd10_group2indx)+table_len(ic
 local valid =torch.Tensor(vasize,20,100+table_len(icd10_group2indx)+table_len(icd10_etiology2indx)):fill(-1)
 local test = torch.Tensor(tesize,20,100+table_len(icd10_group2indx)+table_len(icd10_etiology2indx)):fill(-1)
 
-local train_class =torch.LongTensor(trsize):fill(-1)
-local valid_class =torch.LongTensor(vasize):fill(-1)
-local test_class = torch.LongTensor(tesize):fill(-1)
+local train_class =torch.LongTensor(trsize,112):fill(0) --112 due to 113 cause recode
+local valid_class =torch.LongTensor(vasize,112):fill(0)
+local test_class = torch.LongTensor(tesize,112):fill(0)
 
 print ('Train size: ' .. trsize)
 print ('Validation size: '.. vasize)
@@ -133,11 +133,11 @@ for i=1,trsize do
 	for j=1,num_ent do
 		temp[20-j-num_ent]:fill(0)
 		temp[20-j-num_ent][icd10_group2indx[string.sub(data[ind].entity_axis_conds[j],1,1)]]=1
-		temp[20-j-num_ent][num_group+tonumber(string.sub(data[ind].entity_axis_conds[j],2,3))]=1
+		temp[20-j-num_ent][num_group+tonumber(string.sub(data[ind].entity_axis_conds[j],2,3))+1]=1
 		temp[20-j-num_ent][num_group+100+icd10_etiology2indx[string.sub(data[ind].entity_axis_conds[j],4,4)]]=1
 	end
 	train[i]=temp
-	train_class[i]=data[ind].underlying_cause_113
+	train_class[i][data[ind].underlying_cause_113]=1
 end
 
 
@@ -148,11 +148,11 @@ for i=trsize+1,trsize+tesize do
 	for j=1,num_ent do
 		temp[20-j-num_ent]:fill(0)
 		temp[20-j-num_ent][icd10_group2indx[string.sub(data[ind].entity_axis_conds[j],1,1)]]=1
-		temp[20-j-num_ent][num_group+tonumber(string.sub(data[ind].entity_axis_conds[j],2,3))]=1
+		temp[20-j-num_ent][num_group+tonumber(string.sub(data[ind].entity_axis_conds[j],2,3))+1]=1
 		temp[20-j-num_ent][num_group+100+icd10_etiology2indx[string.sub(data[ind].entity_axis_conds[j],4,4)]]=1
 	end
 	test[i]=temp
-	test_class[i]=data[ind].underlying_cause_113
+	test_class[i][data[ind].underlying_cause_113]=1
 end
 
 for i=trsize+tesize+1,trsize+tesize+vasize do
@@ -162,30 +162,30 @@ for i=trsize+tesize+1,trsize+tesize+vasize do
 	for j=1,num_ent do
 		temp[20-j-num_ent]:fill(0)
 		temp[20-j-num_ent][icd10_group2indx[string.sub(data[ind].entity_axis_conds[j],1,1)]]=1
-		temp[20-j-num_ent][num_group+tonumber(string.sub(data[ind].entity_axis_conds[j],2,3))]=1
+		temp[20-j-num_ent][num_group+tonumber(string.sub(data[ind].entity_axis_conds[j],2,3))+1]=1
 		temp[20-j-num_ent][num_group+100+icd10_etiology2indx[string.sub(data[ind].entity_axis_conds[j],4,4)]]=1
 	end
 	valid[i]=temp
-	valid_class[i]=data[ind].underlying_cause_113
+	valid_class[i][data[ind].underlying_cause_113]=1
 end
 
 
 -- create train set:
 local trainData = {
 	causes = train,
-	underlying=train_class
+	underlying=class
 }
 
 -- create validation set:
 local validData = {
 	causes = valid,
-	underlying= valid_class,
+	underlying= class,
 }
 
 --create test set:
 local testData = {
 	causes= test,
-	underlying=test_class,
+	underlying=class,
 }
 
 -- Exports
