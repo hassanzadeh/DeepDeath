@@ -54,7 +54,7 @@ local function train()
 	print("==> online epoch # " .. epoch .. ' [batchSize = ' .. opt.batchSize .. ']')
 	for t = 1,data.train.causes:size(1),opt.batchSize do
       -- disp progress
-		--xlua.progress(t, data.train.int:size(1))
+		xlua.progress(t, data.train.underlying:size(1))
 		collectgarbage()
 
       -- batch fits?
@@ -102,6 +102,7 @@ local function train()
 
 	end
 
+	print('')
    -- time taken
 	time = sys.clock() - time
 	time = time / data.train.causes:size(1)
