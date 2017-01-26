@@ -103,8 +103,8 @@ for k,v in ipairs {' ','0','1','2','3','4','5','6','7','8','9'} do
 	icd10_etiology2indx[v]=k 
 end
 
-local trsize = torch.round(#data*.6) 
-local vasize= torch.round(#data * 0.15)
+local trsize = torch.round(#data*.7) 
+local vasize= torch.round(#data * 0.01)
 local tesize= #data-trsize -vasize
 
 local train =torch.Tensor(trsize,20,100+table_len(icd10_group2indx)+table_len(icd10_etiology2indx)):fill(-1)
@@ -137,7 +137,7 @@ for i=1,trsize do
 		temp[20-j-num_ent][num_group+100+icd10_etiology2indx[string.sub(data[ind].entity_axis_conds[j],4,4)]]=1
 	end
 	train[i]=temp
-	train_class[i][data[ind].underlying_cause_113]=1
+	train_class[i][data[ind].underlying_cause_113+1]=1
 end
 
 
@@ -152,7 +152,7 @@ for i=trsize+1,trsize+tesize do
 		temp[20-j-num_ent][num_group+100+icd10_etiology2indx[string.sub(data[ind].entity_axis_conds[j],4,4)]]=1
 	end
 	test[i]=temp
-	test_class[i][data[ind].underlying_cause_113]=1
+	test_class[i][data[ind].underlying_cause_113+1]=1
 end
 
 for i=trsize+tesize+1,trsize+tesize+vasize do
@@ -166,7 +166,7 @@ for i=trsize+tesize+1,trsize+tesize+vasize do
 		temp[20-j-num_ent][num_group+100+icd10_etiology2indx[string.sub(data[ind].entity_axis_conds[j],4,4)]]=1
 	end
 	valid[i]=temp
-	valid_class[i][data[ind].underlying_cause_113]=1
+	valid_class[i][data[ind].underlying_cause_113+1]=1
 end
 
 
