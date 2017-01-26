@@ -22,7 +22,7 @@ print(sys.COLORS.red ..  '==> setting parameters')
 
 local noutputs = 1
 
-local cause_len = data.train.causes:size(2)
+local cause_len = data.train.causes[1]:size(2)
 print ('Individual cause dimension: ' .. cause_len)
 local lstm_layers={}
 for layer_size in string.gmatch(opt.lstm_layers,"%d+") do
@@ -36,7 +36,7 @@ for i=1,#lstm_layers do
 	local lstm_inp_dim
 	local lstm_outp_dim = lstm_layers[i]
 	if (i==1) then 
-		lstm_inp_dim = num_kernels
+		lstm_inp_dim = data.train.causes[1]:size(2)
 	else
 		lstm_inp_dim = lstm_layers[i-1]
 	end
@@ -47,7 +47,7 @@ for i=1,#lstm_layers do
 end
 model:add(nn.SplitTable(2,3))
 model:add(nn.SelectTable(-1))
-model:add(nn.Linear(lstm_layers[#lstm_layers],data.train.class[1]:size(1)))
+model:add(nn.Linear(lstm_layers[#lstm_layers],#data.classes))
 model:add(nn.LogSoftMax())
 
 criterion= nn.ClassNLLCriterion()

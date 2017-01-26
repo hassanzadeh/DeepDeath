@@ -89,8 +89,10 @@ local function read_mortality(file)
 		end
 
 		if (underlying_cause_113<112) then -- certified by physician
-			data[#data+ 1] = {age=torch.round(age_days/36.5)/10.0,manner=manner_of_death,underlying_cause=underlying_cause_113,entity_axis_conds=entity_axis_conds}--,rec_axis_conds=rec_axis_conds
-			
+			data[#data+ 1] = {age=torch.round(age_days/36.5)/10.0,manner=manner_of_death,underlying_cause_113=underlying_cause_113,entity_axis_conds=entity_axis_conds}--,rec_axis_conds=rec_axis_conds
+		elseif( underlying_cause_113<1) then
+			print ('Wrong underlying cause! ' .. underlying_cause_113)
+			os.exit(1)
 		end
   	end
 
@@ -111,9 +113,9 @@ local train =torch.Tensor(trsize,20,100+table_len(icd10_group2indx)+table_len(ic
 local valid =torch.Tensor(vasize,20,100+table_len(icd10_group2indx)+table_len(icd10_etiology2indx)):fill(-1)
 local test = torch.Tensor(tesize,20,100+table_len(icd10_group2indx)+table_len(icd10_etiology2indx)):fill(-1)
 
-local train_class =torch.LongTensor(trsize,112):fill(0) --112 due to 113 cause recode
-local valid_class =torch.LongTensor(vasize,112):fill(0)
-local test_class = torch.LongTensor(tesize,112):fill(0)
+local train_class =torch.LongTensor(trsize):fill(0)
+local valid_class =torch.LongTensor(vasize):fill(0)
+local test_class = torch.LongTensor(tesize):fill(0)
 
 print ('Train size: ' .. trsize)
 print ('Validation size: '.. vasize)
@@ -131,66 +133,70 @@ for i=1,trsize do
 	local ind=shuffle[i]
 	local num_ent=#data[ind].entity_axis_conds
 	for j=1,num_ent do
-		temp[20-j-num_ent]:fill(0)
-		temp[20-j-num_ent][icd10_group2indx[string.sub(data[ind].entity_axis_conds[j],1,1)]]=1
-		temp[20-j-num_ent][num_group+tonumber(string.sub(data[ind].entity_axis_conds[j],2,3))+1]=1
-		temp[20-j-num_ent][num_group+100+icd10_etiology2indx[string.sub(data[ind].entity_axis_conds[j],4,4)]]=1
+		temp[20-j+1]:fill(0)
+		temp[20-j+1][icd10_group2indx[string.sub(data[ind].entity_axis_conds[j],1,1)]]=1
+		temp[20-j+1][num_group+tonumber(string.sub(data[ind].entity_axis_conds[j],2,3))+1]=1
+		temp[20-j+1][num_group+100+icd10_etiology2indx[string.sub(data[ind].entity_axis_conds[j],4,4)]]=1
 	end
 	train[i]=temp
-	train_class[i][data[ind].underlying_cause_113+1]=1
+	train_class[i]=data[ind].underlying_cause_113
 end
 
-
-for i=trsize+1,trsize+tesize do
+for i=1,vasize do
 	temp:fill(-1)
-	local ind=shuffle[i]
+	local ind=shuffle[i+trsize]
 	local num_ent=#data[ind].entity_axis_conds
 	for j=1,num_ent do
-		temp[20-j-num_ent]:fill(0)
-		temp[20-j-num_ent][icd10_group2indx[string.sub(data[ind].entity_axis_conds[j],1,1)]]=1
-		temp[20-j-num_ent][num_group+tonumber(string.sub(data[ind].entity_axis_conds[j],2,3))+1]=1
-		temp[20-j-num_ent][num_group+100+icd10_etiology2indx[string.sub(data[ind].entity_axis_conds[j],4,4)]]=1
-	end
-	test[i]=temp
-	test_class[i][data[ind].underlying_cause_113+1]=1
-end
-
-for i=trsize+tesize+1,trsize+tesize+vasize do
-	temp:fill(-1)
-	local ind=shuffle[i]
-	local num_ent=#data[ind].entity_axis_conds
-	for j=1,num_ent do
-		temp[20-j-num_ent]:fill(0)
-		temp[20-j-num_ent][icd10_group2indx[string.sub(data[ind].entity_axis_conds[j],1,1)]]=1
-		temp[20-j-num_ent][num_group+tonumber(string.sub(data[ind].entity_axis_conds[j],2,3))+1]=1
-		temp[20-j-num_ent][num_group+100+icd10_etiology2indx[string.sub(data[ind].entity_axis_conds[j],4,4)]]=1
+		temp[20-j+1]:fill(0)
+		temp[20-j+1][icd10_group2indx[string.sub(data[ind].entity_axis_conds[j],1,1)]]=1
+		temp[20-j+1][num_group+tonumber(string.sub(data[ind].entity_axis_conds[j],2,3))+1]=1
+		temp[20-j+1][num_group+100+icd10_etiology2indx[string.sub(data[ind].entity_axis_conds[j],4,4)]]=1
 	end
 	valid[i]=temp
-	valid_class[i][data[ind].underlying_cause_113+1]=1
+	valid_class[i]=data[ind].underlying_cause_113
 end
 
+
+for i=1,tesize do
+	temp:fill(-1)
+	local ind=shuffle[i+trsize+vasize]
+	local num_ent=#data[ind].entity_axis_conds
+	for j=1,num_ent do
+		temp[20-j+1]:fill(0)
+		temp[20-j+1][icd10_group2indx[string.sub(data[ind].entity_axis_conds[j],1,1)]]=1
+		temp[20-j+1][num_group+tonumber(string.sub(data[ind].entity_axis_conds[j],2,3))+1]=1
+		temp[20-j+1][num_group+100+icd10_etiology2indx[string.sub(data[ind].entity_axis_conds[j],4,4)]]=1
+	end
+	test[i]=temp
+	test_class[i]=data[ind].underlying_cause_113
+end
 
 -- create train set:
 local trainData = {
 	causes = train,
-	underlying=class
+	underlying=train_class
 }
 
 -- create validation set:
 local validData = {
 	causes = valid,
-	underlying= class,
+	underlying= valid_class,
 }
 
 --create test set:
 local testData = {
 	causes= test,
-	underlying=class,
+	underlying=test_class,
 }
 
+local classes={}
+for i=1,111 do  --excluding non-natural deaths
+	classes[#classes+1]=i
+end
 -- Exports
 return {
 	train= trainData,
 	valid=validData,
-	test= testData
+	test= testData,
+	classes=classes
 }

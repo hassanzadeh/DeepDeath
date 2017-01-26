@@ -1,10 +1,8 @@
 require 'torch'   -- torch
 require 'optim'   -- an optimization package, for online and batch methods
 require 'image'
-require 'corr'
 
 ----------------------------------------------------------------------
-print(sys.COLORS.red .. '==> defining some tools')
 
 -- model:
 local t = require 'model'
@@ -17,10 +15,8 @@ local x_train,x_test,x_valid
 local targets_train ,targets_test ,targets_valid
 local confusion_test,confusion_train
 
-classes={}
-for i=1,data.train.underlying[1]:size(1) do
-	classes{#classes+1}=i
-end
+classes=data.classes
+
 confusion_train= optim.ConfusionMatrix(classes)
 confusion_valid= optim.ConfusionMatrix(classes)
 confusion_test = optim.ConfusionMatrix(classes)
@@ -29,9 +25,9 @@ class_train =data.train.underlying:clone()
 class_test =data.test.underlying:clone()
 class_valid =data.valid.underlying:clone()
 
-x_train= torch.Tensor(data.train.cause:size(1) , data.train.cause:size(2) , data.train.cause:size(3)) 
-x_test= torch.Tensor(data.test.cause:size(1),data.test.cause:size(2) , data.test.cause:size(3)) 
-x_val= torch.Tensor(data.valid.cause:size(1) ,data.valid.cause:size(2) , data.valid.cause:size(3)) 
+x_train= torch.Tensor(data.train.causes:size(1) , data.train.causes:size(2) , data.train.causes:size(3)) 
+x_test= torch.Tensor(data.test.causes:size(1),data.test.causes:size(2) , data.test.causes:size(3)) 
+x_val= torch.Tensor(data.valid.causes:size(1) ,data.valid.causes:size(2) , data.valid.causes:size(3)) 
 
 if opt.type == 'cuda' then 
 	x_train=x_train:cuda()
@@ -47,7 +43,7 @@ end
 
 -- test function
 function test()
-	model:evluate()
+	model:evaluate()
 
     confusion_train:zero()
     confusion_valid:zero()
@@ -58,7 +54,7 @@ function test()
 		-- test over test data
 	print(sys.COLORS.red .. '==> testing on test set:')
 	local preds_train = model:forward(x_train):clone()
-	local preds_val = model:forward(x_val):clone()
+	local preds_valid = model:forward(x_val):clone()
 	local preds_test = model:forward(x_test):clone()
 	
 	confusion_train:batchAdd(preds_train, class_train)
@@ -72,7 +68,7 @@ function test()
 	local valid_acc=confusion_valid.totalValid * 100
 	local test_acc=confusion_test.totalValid * 100
 
-	print ('Mean class accuracy (train set, validation set,test set) ' .. train_acc .. ' ' valid_acc.. ' '..  test_acc )
+	print ('Mean class accuracy (train set, validation set,test set) ' .. train_acc .. ' '.. valid_acc.. ' '..  test_acc )
 	--[[print ("-------------")
 	print (confusion_train)
 	print (confusion_test)

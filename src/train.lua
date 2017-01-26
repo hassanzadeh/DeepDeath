@@ -27,8 +27,8 @@ local optimState = {
 }
 
 
-local x = torch.Tensor(opt.batchSize,data.train.cause[1]:size(1),data.train.cause[1]:size(2))
-local yt = torch.Tensor(opt.batchSize,data.train.underlying[1]:size(1))
+local x = torch.Tensor(opt.batchSize,data.train.causes[1]:size(1),data.train.causes[1]:size(2))
+local yt = torch.Tensor(opt.batchSize)
 if opt.type == 'cuda' then 
 	x = x:cuda()
 	yt = yt:cuda()
@@ -48,24 +48,24 @@ local function train()
 	local mean_dfdx = torch.Tensor():typeAs(w):resizeAs(w):zero()
 
    -- shuffle at each epoch
-	local shuffle = torch.randperm(data.train.cause:size(1))
+	local shuffle = torch.randperm(data.train.causes:size(1))
 	local err = 0
 
 	print("==> online epoch # " .. epoch .. ' [batchSize = ' .. opt.batchSize .. ']')
-	for t = 1,data.train.cause:size(1),opt.batchSize do
+	for t = 1,data.train.causes:size(1),opt.batchSize do
       -- disp progress
 		--xlua.progress(t, data.train.int:size(1))
 		collectgarbage()
 
       -- batch fits?
-		if (t + opt.batchSize - 1) > data.train.cause:size(1) then
+		if (t + opt.batchSize - 1) > data.train.causes:size(1) then
 			break
 		end
 
       -- create mini batch
 		local idx = 1
 		for i = t,t+opt.batchSize-1 do
-			x[idx] = data.train.cause[shuffle[i]]
+			x[idx] = data.train.causes[shuffle[i]]
 			yt[idx] = data.train.underlying[shuffle[i]]
 			idx = idx + 1
 		end
@@ -104,7 +104,7 @@ local function train()
 
    -- time taken
 	time = sys.clock() - time
-	time = time / data.train.int:size(1)
+	time = time / data.train.causes:size(1)
 --print("\n==> time to learn 1 sample = " .. (time*1000) .. 'ms')
 
    -- next epoch
