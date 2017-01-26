@@ -53,21 +53,18 @@ if opt.type == 'cuda' then
 end
 
 print (opt)
-----------------------------------------------------------------------
-print(sys.COLORS.red ..  '==> load modules')
 
+----------------------------------------------------------------------
 data  = require 'data'
---[[local train = require 'train'
+local train = require 'train'
 local test  = require 'test'
 ------------------------------------------------------------------------
-print(sys.COLORS.red .. '==> training!')
 
-local safe = false;
+print(sys.COLORS.red .. '==> training!')
 for i=1,100 do
 	train()
 	test()
 end
-]]
 
 
 return data
