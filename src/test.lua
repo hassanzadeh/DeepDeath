@@ -11,33 +11,20 @@ local criterion = t.criterion
 
 -- Batch test:
 
-local x_train,x_test,x_valid
-local targets_train ,targets_test ,targets_valid
 local confusion_test,confusion_train
 
-classes=data.classes
+class_names=data.class_names
 
-confusion_train= optim.ConfusionMatrix(classes)
-confusion_valid= optim.ConfusionMatrix(classes)
-confusion_test = optim.ConfusionMatrix(classes)
+confusion_train= optim.ConfusionMatrix(class_names)
+confusion_valid= optim.ConfusionMatrix(class_names)
+confusion_test = optim.ConfusionMatrix(class_names)
 
-class_train =data.train.underlying:clone()
-class_test =data.test.underlying:clone()
-class_valid =data.valid.underlying:clone()
-
-x_train= torch.Tensor(data.train.causes:size(1) , data.train.causes:size(2) , data.train.causes:size(3)) 
-x_test= torch.Tensor(data.test.causes:size(1),data.test.causes:size(2) , data.test.causes:size(3)) 
-x_val= torch.Tensor(data.valid.causes:size(1) ,data.valid.causes:size(2) , data.valid.causes:size(3)) 
+local x= torch.Tensor(opt.batchSize , data.train.causes:size(2) , data.train.causes:size(3)) 
+local yt=torch.LongTensor(opt.batchSize)
 
 if opt.type == 'cuda' then 
-	x_train=x_train:cuda()
-	calss_train = class_train:cuda()
-
-	x_valid=x_valid:cuda()
-	class_valid= class_valid:cuda()
-
-	x_test=x_test:cuda()
-	class_test= class_test:cuda()
+	x=x:cuda()
+	yt= yt:cuda()
 end
 
 
@@ -51,30 +38,72 @@ function test()
 
 	local time = sys.clock()
 
-		-- test over test data
-	print(sys.COLORS.red .. '==> testing on test set:')
-	local preds_train = model:forward(x_train):clone()
-	local preds_valid = model:forward(x_val):clone()
-	local preds_test = model:forward(x_test):clone()
+	print(sys.COLORS.red .. '\n==> testing on the training set:')
 	
-	confusion_train:batchAdd(preds_train, class_train)
-	confusion_valid:batchAdd(preds_valid, class_valid)
-	confusion_test:batchAdd(preds_test, class_test)
+	for t = 1,data.train.causes:size(1),opt.batchSize do
+      	-- disp progress
+		xlua.progress(t, data.train.underlying:size(1))
+	  	local len
+      	-- batch fits?
+		if (t + opt.batchSize - 1) > data.train.causes:size(1) then
+			len=data.train.causes:size(1)-t+1 
+		else
+			len=opt.batchSize
+		end
+		-- create mini batch
+		local idx = 1
+		for i = t,t+len-1 do
+			x[idx] = data.train.causes[i]
+			yt[idx] = data.train.underlying[i]
+			idx = idx + 1
+		end
+		preds_train= model:forward(x:narrow(1,1,len))
+		confusion_train:batchAdd(preds_train, yt:narrow(1,1,len))
+	end
 
-	confusion_test:updateValids()
-	confusion_train:updateValids()
+	print('')
+	print(sys.COLORS.red .. '\n==> testing on the test set:')
+	
+	for t = 1,data.test.causes:size(1),opt.batchSize do
+      	-- disp progress
+		xlua.progress(t, data.test.underlying:size(1))
+	  	local len
+      	-- batch fits?
+		if (t + opt.batchSize - 1) > data.test.causes:size(1) then
+			len=data.test.causes:size(1)-t+1 
+		else
+			len=opt.batchSize
+		end
+		-- create mini batch
+		local idx = 1
+		for i = t,t+len-1 do
+			x[idx] = data.test.causes[i]
+			yt[idx] = data.test.underlying[i]
+			idx = idx + 1
+		end
+		preds_test= model:forward(x:narrow(1,1,len))
+		confusion_test:batchAdd(preds_test, yt:narrow(1,1,len))
+	end
 
-	local train_acc=confusion_train.totalValid * 100
-	local valid_acc=confusion_valid.totalValid * 100
-	local test_acc=confusion_test.totalValid * 100
+	local train_acc=confusion_train.totalValid * 100.0
+--	local valid_acc=confusion_valid.totalValid * 100
+	local test_acc=confusion_test.totalValid * 100.0
 
-	print ('Mean class accuracy (train set, validation set,test set) ' .. train_acc .. ' '.. valid_acc.. ' '..  test_acc )
-	--[[print ("-------------")
+	print('')
+	print ('Mean class accuracy (train set, test set) ' .. train_acc ..  ' '..  test_acc )
+	--[[
+	print ("-------------")
 	print (confusion_train)
 	print (confusion_test)
-	print ("-------------")]]
+	print ("-------------")
+	]]
+	logger:write(tostring(confusion_train))
+	logger:write("\n")
+	logger:write(tostring(confusion_test))
+	logger:write("\n---------\n")
+	logger:flush()
 
-	return train_acc,valid_acc,test_acc
+	return train_acc,test_acc
 
 end
 

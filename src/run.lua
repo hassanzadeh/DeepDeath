@@ -13,8 +13,6 @@ require 'image'	-- to visualize the dataset
 require 'nn'		-- provides all sorts of trainable modules/layers
 require 'os'
 
-----------------------------------------------------------------------
-print(sys.COLORS.red ..  '==> processing options')
 
 opt = lapp[[
 	-r,--learningRate		 (default 3e-3)		  learning rate
@@ -31,6 +29,7 @@ opt = lapp[[
 		--data_dir			(default /nv/pf1/hhassanzadeh3/Projects/Mortality_Prediction/data/)   location of mortality data
 		--input_file 	(default VS15MORT.DUSMCPUB)    name of mortality file
 		--lstm_layers (default 30,30)  layers' sizes of lstm
+		--load 		Load =1 / Read file o.w.
 ]]
 
 
@@ -43,6 +42,15 @@ end
 torch.setnumthreads(opt.threads)
 torch.manualSeed(7)
 torch.setdefaulttensortype('torch.FloatTensor')
+
+logger= io.open(opt.data_dir..opt.input_file..".log","a")
+logger:write("\n\n\n======================\n");
+for key,value in pairs(opt) do
+	logger:write(key.. ":"..tostring(value).."\n");
+end
+logger:write("\n")
+logger:flush()
+
 
 -- type:
 if opt.type == 'cuda' then

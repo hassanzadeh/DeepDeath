@@ -47,7 +47,7 @@ for i=1,#lstm_layers do
 end
 model:add(nn.SplitTable(2,3))
 model:add(nn.SelectTable(-1))
-model:add(nn.Linear(lstm_layers[#lstm_layers],#data.classes))
+model:add(nn.Linear(lstm_layers[#lstm_layers],#data.class_names))
 model:add(nn.LogSoftMax())
 
 criterion= nn.ClassNLLCriterion()

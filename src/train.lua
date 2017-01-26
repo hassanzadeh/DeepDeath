@@ -36,6 +36,9 @@ end
 
 
 local epoch
+local mean_dfdx = torch.Tensor():typeAs(w):resizeAs(w):zero()
+local shuffle = torch.randperm(data.train.causes:size(1))
+
 local function train()
 	model:training()
 
@@ -45,17 +48,18 @@ local function train()
    -- local vars
 	local time = sys.clock()
 	local run_passed = 0
-	local mean_dfdx = torch.Tensor():typeAs(w):resizeAs(w):zero()
+	
+	mean_dfdx :typeAs(w):resizeAs(w):zero()
 
    -- shuffle at each epoch
-	local shuffle = torch.randperm(data.train.causes:size(1))
+	shuffle:randperm(data.train.causes:size(1))
 	local err = 0
 
 	print("==> online epoch # " .. epoch .. ' [batchSize = ' .. opt.batchSize .. ']')
 	for t = 1,data.train.causes:size(1),opt.batchSize do
+		collectgarbage()
       -- disp progress
 		xlua.progress(t, data.train.underlying:size(1))
-		collectgarbage()
 
       -- batch fits?
 		if (t + opt.batchSize - 1) > data.train.causes:size(1) then
