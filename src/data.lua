@@ -235,8 +235,8 @@ else
 		test= testData,
 		class_names=class_names
 	}
-	torch.save(opt.data_dir..'/'..opt.input_file..'.tch',output)
-	print ('Train/Test/Validation sets serialized')
+--	torch.save(opt.data_dir..'/'..opt.input_file..'.tch',output)
+--	print ('Train/Test/Validation sets serialized')
 end
 -- Exports
 return  output

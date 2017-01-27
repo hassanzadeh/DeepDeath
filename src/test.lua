@@ -85,11 +85,14 @@ function test()
 		confusion_test:batchAdd(preds_test, yt:narrow(1,1,len))
 	end
 
+	confusion_test:updateValids()
+	confusion_train:updateValids()
+
+	print('')
 	local train_acc=confusion_train.totalValid * 100.0
 --	local valid_acc=confusion_valid.totalValid * 100
 	local test_acc=confusion_test.totalValid * 100.0
 
-	print('')
 	print ('Mean class accuracy (train set, test set) ' .. train_acc ..  ' '..  test_acc )
 	--[[
 	print ("-------------")

@@ -28,7 +28,7 @@ local optimState = {
 
 
 local x = torch.Tensor(opt.batchSize,data.train.causes[1]:size(1),data.train.causes[1]:size(2))
-local yt = torch.Tensor(opt.batchSize)
+local yt = torch.LongTensor(opt.batchSize)
 if opt.type == 'cuda' then 
 	x = x:cuda()
 	yt = yt:cuda()
