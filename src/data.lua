@@ -123,7 +123,7 @@ else
 				local code=string.sub(line,ind+2,ind+5)
 				if (code ~= underlying_icd_10) then
 					entity_axis_conds[#entity_axis_conds+1]=code
-					entity_axis_conds_line_no[#entity_axis_conds_line_no+1]=tonumber(string.sub(line,ind,ind))
+					entity_axis_conds_line_no[#entity_axis_conds_line_no+1]=tonumber(string.sub(line,ind,ind+1))
 				end
 			end
 			if (underlying_cause_113<112 and incidence_count[underlying_cause_113]>999 and (#entity_axis_conds ~= 0)) then -- certified by physician
@@ -168,7 +168,7 @@ else
 
 	local data,underlying,inc_count,size=read_mortality(opt.data_dir .. opt.input_file)
 	if (opt.ying) then
-		NCHS_train_or_test= io.open(opt.data_dir.."/NCHS_tabular.txt","w")
+		NCHS_train_or_test= io.open(opt.data_dir.."/NCHS_train_or_test.txt","w")
 	end
 
 	local classes={}
