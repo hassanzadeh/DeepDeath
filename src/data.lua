@@ -42,6 +42,10 @@ else
 			print ('File not found: ' .. file )
 			os.exit(1) 
 		end
+		local NCHS_tabular,NCHS_train_or_test
+		if (opt.ying) then
+			NCHS_tabular= io.open(opt.data_dir.."/NCHS_tabular.txt","w")
+		end
 		local incidence_count= {}
 		local icd10_group2indx={}
 		for line in io.lines(file) do 
@@ -63,7 +67,6 @@ else
 				else	
 					incidence_count[underlying_cause_113]=incidence_count[underlying_cause_113]+1
 				end
-				
 			end
 		end
 		local size=0
@@ -102,6 +105,7 @@ else
 			local marital=string.sub(line,84,84)
 			local manner_of_death=string.sub(line,107,107)]]
 			local underlying_cause_113 = tonumber(string.sub(line,154,156))
+			local underlying_icd_10=string.sub(line,146,149)
 			local num_ent_axis_conditions=tonumber(string.sub(line,163,164))
 
 			if (num_ent_axis_conditions > max_ent) then 
@@ -112,21 +116,33 @@ else
 				os.exit(1)
 			end
 			local entity_axis_conds={}
+			local entity_axis_conds_line_no={}
 			--print (num_ent_axis_conditions)
 			for i=0,num_ent_axis_conditions-1 do
 				local ind=165+i*7
 				local code=string.sub(line,ind+2,ind+5)
-				entity_axis_conds[#entity_axis_conds+1]=code
+				if (code ~= underlying_icd_10) then
+					entity_axis_conds[#entity_axis_conds+1]=code
+					entity_axis_conds_line_no[#entity_axis_conds_line_no+1]=tonumber(string.sub(line,ind,ind))
+				end
 			end
-			if (underlying_cause_113<112 and incidence_count[underlying_cause_113]>999) then -- certified by physician
+			if (underlying_cause_113<112 and incidence_count[underlying_cause_113]>999 and (#entity_axis_conds ~= 0)) then -- certified by physician
 				ind=ind+1
-				for i=1,num_ent_axis_conditions do
+				NCHS_tabular:write(tostring(ind).." "..tostring(underlying_cause_113))
+				for i=1,#entity_axis_conds do
+					NCHS_tabular:write(" "..entity_axis_conds_line_no[i]..":"..entity_axis_conds[i])
 					data[ind][20-i+1][icd10_group2indx[string.sub(entity_axis_conds[i],1,1)]]=1
 					data[ind][20-i+1][num_group+tonumber(string.sub(entity_axis_conds[i],2,3))+1]=1
 					data[ind][20-i+1][num_group+100+icd10_etiology2indx[string.sub(entity_axis_conds[i],4,4)]]=1
 				end
+				NCHS_tabular:write("\n")
 				underlying[ind]=underlying_cause_113
-			elseif( underlying_cause_113<1) then
+				--[[print ("==============================")
+				print (entity_axis_conds)
+				print (underlying_cause_113)
+				print ("==========end=====================")
+				]]
+			elseif(underlying_cause_113<1) then
 				print ('Wrong underlying cause! ' .. underlying_cause_113)
 				os.exit(1)
 			end
@@ -144,16 +160,16 @@ else
 ]]
 
   		end
-		if (data:size(1) ~= ind) then
-			print ('Mismatch in data size and number of entries! ' .. data:size(1) .. ' '.. ind)
-			os.exit(1)
-		end
 		print ('File parsed')
-	  	return data,underlying,incidence_count
+		if (opt.ying) then  NCHS_tabular:close() end
+	  	return data,underlying,incidence_count,ind
 	end
 
 
-	local data,underlying,inc_count=read_mortality(opt.data_dir .. opt.input_file)
+	local data,underlying,inc_count,size=read_mortality(opt.data_dir .. opt.input_file)
+	if (opt.ying) then
+		NCHS_train_or_test= io.open(opt.data_dir.."/NCHS_tabular.txt","w")
+	end
 
 	local classes={}
 	local class_names={}
@@ -166,9 +182,9 @@ else
 		end
 	end
 	--print (class_names)
-	local trsize = torch.round(data:size(1)*.7) 
-	local vasize= torch.round(data:size(1) * 0.01)
-	local tesize= data:size(1)-trsize -vasize
+	local trsize = torch.round(size * 0.7) 
+	local vasize= torch.round(size * 0.1)
+	local tesize= size-trsize -vasize
 
 	local train =torch.Tensor(trsize,data:size(2),data:size(3)):fill(-1)
 	local valid =torch.Tensor(vasize,data:size(2),data:size(3)):fill(-1)
@@ -181,6 +197,15 @@ else
 	print ('Tensors created')
 
 	local shuffle = torch.randperm(trsize+tesize+vasize)
+	for i=1,shuffle:size(1) do
+		if (i<=trsize) then
+			NCHS_train_or_test:write(tostring(shuffle[i]).." train\n")
+		elseif (i<=trsize+vasize) then
+			NCHS_train_or_test:write(tostring(shuffle[i]).." validation\n")
+		else
+			NCHS_train_or_test:write(tostring(shuffle[i]).." test\n")
+		end
+	end
 
 	for i=1,trsize do
 		local ind=shuffle[i]
@@ -220,8 +245,8 @@ else
 
 	--create test set:
 	local testData = {
-		causes= test,
-		underlying=test_class,
+		causes = test,
+		underlying = test_class,
 	}
 
 	print ('Train size: ' .. trsize)
@@ -235,6 +260,9 @@ else
 		test= testData,
 		class_names=class_names
 	}
+	if (opt.ying) then
+		NCHS_train_or_test:close()
+	end
 --	torch.save(opt.data_dir..'/'..opt.input_file..'.tch',output)
 --	print ('Train/Test/Validation sets serialized')
 end

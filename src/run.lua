@@ -30,6 +30,7 @@ opt = lapp[[
 		--input_file 	(default VS15MORT.DUSMCPUB)    name of mortality file
 		--lstm_layers (default 30,30)  layers' sizes of lstm
 		--load 		Load =1 / Read file o.w.
+		--ying		generate processed features for Ying
 ]]
 
 

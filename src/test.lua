@@ -38,7 +38,7 @@ function test()
 
 	local time = sys.clock()
 
-	print(sys.COLORS.red .. '\n==> testing on the training set:')
+--[[	print(sys.COLORS.red .. '\n==> testing on the training set:')
 	
 	for t = 1,data.train.causes:size(1),opt.batchSize do
       	-- disp progress
@@ -62,6 +62,7 @@ function test()
 	end
 
 	print('')
+	]]
 	print(sys.COLORS.red .. '\n==> testing on the test set:')
 	
 	for t = 1,data.test.causes:size(1),opt.batchSize do
