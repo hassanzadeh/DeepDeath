@@ -1,1 +1,1 @@
-qsub -I -q nvidia-gpu -l mem=35gb -l nodes=1:gpus=1  -l walltime=2:00:00 -p 999
+qsub -I -q nvidia-gpu -l mem=35gb -l nodes=1:gpus=1  -l walltime=4:00:00 -p 999

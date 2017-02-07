@@ -30,7 +30,7 @@ opt = lapp[[
 		--input_file 	(default VS15MORT.DUSMCPUB)    name of mortality file
 		--lstm_layers (default 30,30)  layers' sizes of lstm
 		--load 		Load =1 / Read file o.w.
-		--ying		generate processed features for Ying
+		--data2			if data2 is active load from data2
 ]]
 
 
@@ -64,7 +64,11 @@ end
 print (opt)
 
 ----------------------------------------------------------------------
-data  = require 'data'
+if (opt.data2) then
+	data  = require 'data_2'
+else
+	data  = require 'data'
+end
 local train = require 'train'
 local test  = require 'test'
 ------------------------------------------------------------------------

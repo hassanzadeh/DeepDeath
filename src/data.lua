@@ -78,7 +78,7 @@ else
 		local num_group=table_len(icd10_group2indx)
 		local num_etio=table_len(icd10_etiology2indx)
 
-		local data=torch.Tensor(size,20,100+num_group+num_etio):fill(-1)
+		local data=torch.Tensor(size,20,100+num_group+num_etio):fill(0)
 		local underlying=torch.LongTensor(size)
 		local max_ent =0
 		local ind=0
@@ -128,14 +128,20 @@ else
 			end
 			if (underlying_cause_113<112 and incidence_count[underlying_cause_113]>999 and (#entity_axis_conds ~= 0)) then -- certified by physician
 				ind=ind+1
-				NCHS_tabular:write(tostring(ind).." "..tostring(underlying_cause_113))
+				if (opt.ying) then
+					NCHS_tabular:write(tostring(ind).." "..tostring(underlying_cause_113))
+				end
 				for i=1,#entity_axis_conds do
-					NCHS_tabular:write(" "..entity_axis_conds_line_no[i]..":"..entity_axis_conds[i])
+					if (opt.ying) then
+						NCHS_tabular:write(" "..entity_axis_conds_line_no[i]..":"..entity_axis_conds[i])
+					end
 					data[ind][20-i+1][icd10_group2indx[string.sub(entity_axis_conds[i],1,1)]]=1
 					data[ind][20-i+1][num_group+tonumber(string.sub(entity_axis_conds[i],2,3))+1]=1
 					data[ind][20-i+1][num_group+100+icd10_etiology2indx[string.sub(entity_axis_conds[i],4,4)]]=1
 				end
-				NCHS_tabular:write("\n")
+				if (opt.ying) then
+					NCHS_tabular:write("\n")
+				end
 				underlying[ind]=underlying_cause_113
 				--[[print ("==============================")
 				print (entity_axis_conds)
@@ -186,9 +192,9 @@ else
 	local vasize= torch.round(size * 0.1)
 	local tesize= size-trsize -vasize
 
-	local train =torch.Tensor(trsize,data:size(2),data:size(3)):fill(-1)
-	local valid =torch.Tensor(vasize,data:size(2),data:size(3)):fill(-1)
-	local test = torch.Tensor(tesize,data:size(2),data:size(3)):fill(-1)
+	local train =torch.Tensor(trsize,data:size(2),data:size(3)):fill(0)
+	local valid =torch.Tensor(vasize,data:size(2),data:size(3)):fill(0)
+	local test = torch.Tensor(tesize,data:size(2),data:size(3)):fill(0)
 
 	local train_class =torch.LongTensor(trsize):fill(0)
 	local valid_class =torch.LongTensor(vasize):fill(0)
@@ -197,13 +203,15 @@ else
 	print ('Tensors created')
 
 	local shuffle = torch.randperm(trsize+tesize+vasize)
-	for i=1,shuffle:size(1) do
-		if (i<=trsize) then
-			NCHS_train_or_test:write(tostring(shuffle[i]).." train\n")
-		elseif (i<=trsize+vasize) then
-			NCHS_train_or_test:write(tostring(shuffle[i]).." validation\n")
-		else
-			NCHS_train_or_test:write(tostring(shuffle[i]).." test\n")
+	if (opt.yin) then
+		for i=1,shuffle:size(1) do
+			if (i<=trsize) then
+				NCHS_train_or_test:write(tostring(shuffle[i]).." train\n")
+			elseif (i<=trsize+vasize) then
+				NCHS_train_or_test:write(tostring(shuffle[i]).." validation\n")
+			else
+				NCHS_train_or_test:write(tostring(shuffle[i]).." test\n")
+			end
 		end
 	end
 
