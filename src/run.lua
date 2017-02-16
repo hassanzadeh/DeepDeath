@@ -30,6 +30,7 @@ opt = lapp[[
 		--input_file 	(default VS15MORT.DUSMCPUB)    name of mortality file
 		--lstm_layers (default 30,30)  layers' sizes of lstm
 		--load 		Load =1 / Read file o.w.
+		--ying		whether or not generate features for ying
 		--data2			if data2 is active load from data2
 ]]
 
@@ -65,18 +66,40 @@ print (opt)
 
 ----------------------------------------------------------------------
 if (opt.data2) then
-	data  = require 'data_2'
+	data  = require 'data_filter_len_3'
 else
 	data  = require 'data'
 end
 local train = require 'train'
 local test  = require 'test'
 ------------------------------------------------------------------------
+local function store_features(tensor)
+	local out = assert(io.open("../data/test_features.txt", "w")) -- open a file for serialization
+	splitter = "\t"
+	for i=1,tensor:size(1) do
+    	for j=1,tensor:size(2) do
+			out:write(tensor[i][j])
+			if j == tensor:size(2) then
+				out:write("\n")
+			else
+				out:write(splitter)
+			end
+		end
+	end
 
+	out:close()
+end
+
+local best_acc=0
 print(sys.COLORS.red .. '==> training!')
 for i=1,100 do
 	train()
-	test()
+	_,test_acc,features=test()
+	if (best_acc < test_acc) then
+		best_acc=test_acc
+		store_features(features)
+		print ('Best test acc so far best_acc ' .. best_acc)
+	end
 end
 
 

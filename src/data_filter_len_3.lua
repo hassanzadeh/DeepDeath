@@ -1,6 +1,7 @@
 require 'torch'	-- torch
 require 'nnx'		-- provides a normalization operator
 
+print ('Warning !!!!!!!!!!!!!! loading data_filter_len_3')
 -- see if the file exists
 local function file_exists(file)
   local f = io.open(file, "rb")
@@ -130,7 +131,7 @@ else
 					entity_axis_conds_line_no[#entity_axis_conds_line_no+1]=tonumber(string.sub(line,ind,ind+1))
 				end
 			end
-			if (underlying_cause_113<112 and incidence_count[underlying_cause_113]>999 and (#entity_axis_conds >0 )) then -- certified by physician
+			if (underlying_cause_113<112 and incidence_count[underlying_cause_113]>999 and (#entity_axis_conds ==3 )) then -- certified by physician
 				ind=ind+1
 				if (opt.ying) then
 					NCHS_tabular:write(tostring(ind).." "..tostring(underlying_cause_113))

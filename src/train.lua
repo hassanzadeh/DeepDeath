@@ -12,7 +12,6 @@ local criterion = t.criterion
 local model_name = t.model_name
 
 
-
 -- Retrieve parameters and gradients:
 -- this extracts and flattens all the trainable parameters of the mode
 -- into a 1-dim vector

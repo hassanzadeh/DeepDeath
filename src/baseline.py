@@ -6,14 +6,14 @@ from random import shuffle
 
 
 #TODO: replace with correct filepath
-trainfile= '../data/NCHS_bigram_train_filtered.svmlight'
-testfile='../data/NCHS_bigram_test_filtered.svmlight'
+trainfile= '../data/NCHS_uni+bigram_10k_train_v3.txt'
+testfile='../data/NCHS_uni+bigram_10k_test_v3.txt'
 
 X_train, y_train = load_svmlight_file(trainfile)
 X_test, y_test = load_svmlight_file(testfile)
 
 
-skip = 3
+skip = 10
 #subsampling with skip rate 'skip'
 X_train, y_train = X_train[::skip],y_train[::skip]
 X_test, y_test = X_test[::skip],y_test[::skip]

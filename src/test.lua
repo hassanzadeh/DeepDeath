@@ -27,10 +27,15 @@ if opt.type == 'cuda' then
 	yt= yt:cuda()
 end
 
-
 -- test function
 function test()
 	model:evaluate()
+
+	local model_reduced=model:clone()
+	model_reduced:float()
+	model_reduced:remove(6)
+	model_reduced:evaluate()
+	local features=torch.cat(data.test.underlying:reshape(data.test.underlying:nElement() ,1):float(),model_reduced(data.test.causes),2)
 
     confusion_train:zero()
     confusion_valid:zero()
@@ -38,31 +43,6 @@ function test()
 
 	local time = sys.clock()
 
---[[	print(sys.COLORS.red .. '\n==> testing on the training set:')
-	
-	for t = 1,data.train.causes:size(1),opt.batchSize do
-      	-- disp progress
-		xlua.progress(t, data.train.underlying:size(1))
-	  	local len
-      	-- batch fits?
-		if (t + opt.batchSize - 1) > data.train.causes:size(1) then
-			len=data.train.causes:size(1)-t+1 
-		else
-			len=opt.batchSize
-		end
-		-- create mini batch
-		local idx = 1
-		for i = t,t+len-1 do
-			x[idx] = data.train.causes[i]
-			yt[idx] = data.train.underlying[i]
-			idx = idx + 1
-		end
-		preds_train= model:forward(x:narrow(1,1,len))
-		confusion_train:batchAdd(preds_train, yt:narrow(1,1,len))
-	end
-
-	print('')
-	]]
 	print(sys.COLORS.red .. '\n==> testing on the test set:')
 	
 	for t = 1,data.test.causes:size(1),opt.batchSize do
@@ -107,7 +87,7 @@ function test()
 	logger:write("\n---------\n")
 	logger:flush()
 
-	return train_acc,test_acc
+	return train_acc,test_acc,features
 
 end
 

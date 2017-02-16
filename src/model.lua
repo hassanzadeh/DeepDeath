@@ -54,7 +54,6 @@ criterion= nn.ClassNLLCriterion()
 
 model_name = opt.model
 
-
 ----------------------------------------------------------------------
 print(sys.COLORS.red ..  '==> here is the network:')
 print(model)
