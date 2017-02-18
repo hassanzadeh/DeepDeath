@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+#!/opt/conda/bin/python
 
 import sys
 import random
-
+#from sklearn.ensemble import RandomForestClassifier
 from optparse import OptionParser
+
 
 parser = OptionParser()
 parser.add_option("-n", "--model-num", action="store", dest="n_model",
@@ -13,6 +14,7 @@ parser.add_option("-r", "--sample-ratio", action="store", dest="ratio",
 
 options, args = parser.parse_args(sys.argv)
 
+#classifier = RandomForestClassifier(10)
 random.seed(8803)
 
 for line in sys.stdin:
