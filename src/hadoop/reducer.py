@@ -1,8 +1,8 @@
-#!/opt/conda/bin/python
+#!/usr/bin/python
 import sys
 import pickle
 from optparse import OptionParser
-from lrsgd import LogisticRegressionSGD
+#from lrsgd import LogisticRegressionSGD
 from utils import parse_svm_light_line
 from sklearn.ensemble import RandomForestClassifier
 import string
@@ -19,7 +19,7 @@ options, args = parser.parse_args(sys.argv)
 
 clf=RandomForestClassifier(options.n_estimator)
 filename=''.join(random.choice(string.ascii_uppercase+string.digits) for _ in range(4))
-f=open (filename,'w')
+f=open ('../data/temp/'+filename,'w')
 for line in sys.stdin:
     key, value = line.split("\t", 1)
     f.write(value)
@@ -29,6 +29,6 @@ for line in sys.stdin:
 
 f.close()
 
-X_y = load_svmlight_file(filename)
+X_y = load_svmlight_file('../data/temp/'+filename)
 clf.fit(X_y[0],X_y[1])
 pickle.dump(clf, sys.stdout)

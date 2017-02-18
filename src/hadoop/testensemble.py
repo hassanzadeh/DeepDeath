@@ -2,7 +2,9 @@
 
 import sys
 import os
+import numpy as np
 import pickle
+from sklearn.metrics import accuracy_score
 
 from optparse import OptionParser
 
@@ -14,7 +16,6 @@ matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 
-from lrsgd import LogisticRegressionSGD
 from utils import parse_svm_light_data
 
 
@@ -42,33 +43,47 @@ def predict_prob(classifiers, X):
 if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option("-m", "--model-path", action="store", dest="path",
-                      default="models", help="path where trained classifiers are saved")
-    parser.add_option("-r", "--result", action="store", dest="result",
-                      default="roc", help="name of the figure")
+                      default="../data/models", help="path where trained classifiers are saved")
+    parser.add_option("-t", "--test-file", action="store", dest="testfile",
+                      default="../data/NCHS_uni+bigram_10k_test_v3.txt", help="path to test file")
     
     options, args = parser.parse_args(sys.argv)
 
     files = [options.path + "/" +
              filename for filename in os.listdir(options.path) if filename.startswith('part')]
     classifiers = map(load_model, files)
+    print ('Num classifiers: '+str(len(classifiers))) 
     y_test_prob = []
     y_test = []
-    for X, y in parse_svm_light_data(sys.stdin):
-        y_prob = predict_prob(classifiers, X)
-        y_test.append(y)
-        y_test_prob.append(y_prob)
+    X_y  =load_svmlight_file (options.testfile)
+    X=X_y[0]
+    y=X_y[1]
+    print len(set(y)) 
+    y_prob=np.array(classifiers[0].predict_proba(X))
 
-    fpr, tpr, _ = roc_curve(y_test, y_test_prob)
-    roc_auc = auc(fpr, tpr)
+    for i in xrange(1,len(classifiers)):
+    	y_prob =y_prob+np.array( classifiers[i].predict_proba( X))
+    y_prob=y_prob.tolist()
 
-    # Plot of a ROC curve for a specific class
-    plt.figure()
-    plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
-    plt.plot([0, 1], [0, 1], 'k--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver operating characteristic')
-    plt.legend(loc="lower right")
-    plt.savefig(options.result)
+
+    y_max_prob=[]
+   
+    for i in range(len(y_prob)):
+        y_max_prob.append(y_prob[i].index(max(y_prob[i])))
+    y_pred=classifiers[0].predict(X)
+
+    zp=zip(y_pred,y_max_prob)
+    indx2label=[0]*len(y_prob[0])
+    for pair in zp:
+        indx2label[pair[1]]=pair[0]
+
+    count =0 
+    for i in range(len(y)):
+        if (y[i]==indx2label[y_max_prob[i]]):
+            count +=1
+    acc=count/float(len(y))
+
+
+    print ('Acc: '+str(acc))
+
+
