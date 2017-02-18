@@ -24,8 +24,8 @@ for line in sys.stdin:
     key, value = line.split("\t", 1)
     f.write(value)
 
-    value = value.strip()
-    X, y = parse_svm_light_line(value)
+#    value = value.strip()
+#    X, y = parse_svm_light_line(value)
 
 f.close()
 

@@ -51,31 +51,34 @@ if __name__ == '__main__':
 
     files = [options.path + "/" +
              filename for filename in os.listdir(options.path) if filename.startswith('part')]
-    classifiers = map(load_model, files)
-    print ('Num classifiers: '+str(len(classifiers))) 
-    y_test_prob = []
-    y_test = []
     X_y  =load_svmlight_file (options.testfile)
     X=X_y[0]
     y=X_y[1]
-    print len(set(y)) 
-    y_prob=np.array(classifiers[0].predict_proba(X))
+    print ('Num classifiers: '+str(len(files))) 
+    for file_no in range(len(files)):
+        file=files[file_no]
+        print ('Classifier: '+file)
+        classifier = load_model (file)
+        y_test_prob = []
+        y_test = []
 
-    for i in xrange(1,len(classifiers)):
-    	y_prob =y_prob+np.array( classifiers[i].predict_proba( X))
-    y_prob=y_prob.tolist()
+        if (file_no == 0):
+            y_prob=np.array(classifier.predict_proba(X))
+        else:
+            y_prob =y_prob+np.array( classifiers[i].predict_proba( X))
+        y_prob=y_prob.tolist()
 
-
-    y_max_prob=[]
+        y_max_prob=[]
    
-    for i in range(len(y_prob)):
-        y_max_prob.append(y_prob[i].index(max(y_prob[i])))
-    y_pred=classifiers[0].predict(X)
+        for i in range(len(y_prob)):
+            y_max_prob.append(y_prob[i].index(max(y_prob[i])))
 
-    zp=zip(y_pred,y_max_prob)
-    indx2label=[0]*len(y_prob[0])
-    for pair in zp:
-        indx2label[pair[1]]=pair[0]
+        if (file_no==0):
+            y_pred=classifier.predict(X)
+            zp=zip(y_pred,y_max_prob)
+            indx2label=[0]*len(y_prob[0])
+            for pair in zp:
+                indx2label[pair[1]]=pair[0]
 
     count =0 
     for i in range(len(y)):
