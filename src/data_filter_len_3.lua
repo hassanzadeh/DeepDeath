@@ -1,6 +1,7 @@
 require 'torch'	-- torch
 require 'nnx'		-- provides a normalization operator
 
+print ('Warning !!!!!!!!!!!!!! loading data_filter_len_3')
 -- see if the file exists
 local function file_exists(file)
   local f = io.open(file, "rb")
@@ -78,7 +79,7 @@ else
 		local num_group=table_len(icd10_group2indx)
 		local num_etio=table_len(icd10_etiology2indx)
 
-		local data=torch.Tensor(size,20,100+num_group+num_etio):fill(0)
+		local data=torch.Tensor(size,10,100+num_group+num_etio):fill(0)
 		local underlying=torch.LongTensor(size)
 		local max_ent =0
 		local ind=0
@@ -130,7 +131,7 @@ else
 					entity_axis_conds_line_no[#entity_axis_conds_line_no+1]=tonumber(string.sub(line,ind,ind+1))
 				end
 			end
-			if (underlying_cause_113<112 and incidence_count[underlying_cause_113]>999 and (#entity_axis_conds >0 )) then -- certified by physician
+			if (underlying_cause_113<112 and incidence_count[underlying_cause_113]>999 and (#entity_axis_conds ==3 )) then -- certified by physician
 				ind=ind+1
 				if (opt.ying) then
 					NCHS_tabular:write(tostring(ind).." "..tostring(underlying_cause_113))
@@ -139,9 +140,9 @@ else
 					if (opt.ying) then
 						NCHS_tabular:write(" "..entity_axis_conds_line_no[i]..":"..entity_axis_conds[i])
 					end
-					data[ind][20-i+1][icd10_group2indx[string.sub(entity_axis_conds[i],1,1)]]=1
-					data[ind][20-i+1][num_group+tonumber(string.sub(entity_axis_conds[i],2,3))+1]=1
-					data[ind][20-i+1][num_group+100+icd10_etiology2indx[string.sub(entity_axis_conds[i],4,4)]]=1
+					data[ind][10-i+1][icd10_group2indx[string.sub(entity_axis_conds[i],1,1)]]=1
+					data[ind][10-i+1][num_group+tonumber(string.sub(entity_axis_conds[i],2,3))+1]=1
+					data[ind][10-i+1][num_group+100+icd10_etiology2indx[string.sub(entity_axis_conds[i],4,4)]]=1
 				end
 				if (opt.ying) then
 					NCHS_tabular:write("\n")
@@ -174,6 +175,7 @@ else
 		if (opt.ying) then  NCHS_tabular:close() end
 	  	return data,underlying,incidence_count,ind
 	end
+
 
 	local data,underlying,inc_count,size=read_mortality(opt.data_dir .. opt.input_file)
 	print ('Size of dataset: '..size)
