@@ -17,7 +17,7 @@ parser.add_option("-f", "--feature-num", action="store", dest="n_feature",
                   default=10000,help="number of features", type="int")
 options, args = parser.parse_args(sys.argv)
 
-clf=RandomForestClassifier(options.n_estimator)
+clf=RandomForestClassifier(options.n_estimator,max_depth=100)
 filename=''.join(random.choice(string.ascii_uppercase+string.digits) for _ in range(4))
 f=open ('../data/temp/'+filename,'w')
 for line in sys.stdin:
@@ -29,6 +29,6 @@ for line in sys.stdin:
 
 f.close()
 
-X_y = load_svmlight_file('../data/temp/'+filename)
+X_y = load_svmlight_file('../data/temp/'+filename,options.n_feature)
 clf.fit(X_y[0],X_y[1])
 pickle.dump(clf, sys.stdout)
